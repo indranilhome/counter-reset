@@ -1,0 +1,10 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "counter-reset-app-prod"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1oio5ohc66gzd"
+s3_prefix = "counter-reset-app"
+confirm_changeset = true
+paramter_overides = ["Environment=prod"]
+capabilities = "CAPABILITY_IAM"

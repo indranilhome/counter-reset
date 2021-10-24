@@ -1,0 +1,34 @@
+on:
+  push:
+    branches:
+      - stage
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: aws-actions/setup-sam@v1
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+      - name: install
+        run: |
+          pip install -r counter_reset/requirements.txt
+          pip install -r tests/requirements.txt
+      - name: quality gate
+        env:
+          DBTableName: ${{ secrets.DB_TABLE_STAGE }}
+        run: |
+          python -m pytest tests/unit -v
+          sam validate -t template.yaml
+      - name: build
+        run: sam build --use-container
+      - name: deploy
+        run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --config-file configs/samconfig_stage.toml --parameter-overrides Environment=stage
+      - name: test integration
+        env:
+          AWS_SAM_STACK_NAME: ${{ secrets.AWS_SAM_STACK_NAME_STAGE }}
+        run: python -m pytest tests/integration -v

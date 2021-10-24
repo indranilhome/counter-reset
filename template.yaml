@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  counter-reset
+
+  Sample SAM Template for counter-reset
+
+Globals:
+  Function:
+    Timeout: 300
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues:
+      - stage
+      - prod
+
+Resources:
+  CounterResetApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Cors: "'*'"
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'POST, GET'"
+        AllowOrigin: "'*'"
+  CounterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub counter_${Environment}_lambda
+      CodeUri: counter_reset/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          DBTableName: !Ref CounterDBTable
+      Events:
+        Default:
+          Type: Api 
+          Properties:
+            RestApiId: !Ref CounterResetApi
+            Path: /
+            Method: get
+        Reset:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CounterResetApi
+            Path: /reset
+            Method: post
+      Policies:
+        - Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Action:
+                - "dynamodb:GetItem"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:PutItem"
+              Resource:
+                "Fn::Join":
+                  - ""
+                  - - "arn:aws:dynamodb:"
+                    - Ref: "AWS::Region"
+                    - ":"
+                    - Ref: "AWS::AccountId"
+                    - !Sub :table/counter_${Environment}_table
+  CounterDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub counter_${Environment}_table
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+Outputs:
+  CounterResetApi:
+    Description: "API Gateway endpoint URL for Prod stage for Counter Reset function"
+    Value: !Sub "https://${CounterResetApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+  StackName:
+    Description: "Reset Counter SAM Stack Name"
+    Value: !Ref AWS::StackName

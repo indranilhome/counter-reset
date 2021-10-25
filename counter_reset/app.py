@@ -130,14 +130,24 @@ def lambda_handler(event, context):
             count = CounterDB().inc_count(dynamodb)
             return {
                 "statusCode": 201,
-                "headers": {'content-type': 'application/json'},
+                "headers": {
+                    'content-type': 'application/json',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+                    "Access-Control-Allow-Origin": '*'
+                    },
                 "body": json.dumps({ 'message': f"{count}" })
             }
         if event['path'] == '/reset':
             CounterDB().reset_count(dynamodb)
             return {
                 "statusCode": 201,
-                "headers": {'content-type': 'application/json'},
+                "headers": {
+                    'content-type': 'application/json',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+                    "Access-Control-Allow-Origin": '*'
+                    },
                 "body": '{\"message\": \"0\"}'
             }
 
@@ -147,13 +157,23 @@ def lambda_handler(event, context):
 
         return {
             "statusCode": 500,
-            "headers": {'content-type': 'application/json'},
+            "headers": {
+                'content-type': 'application/json',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+                "Access-Control-Allow-Origin": '*'
+                },
             "body": '{\"error\": \"Server failed to process request\"}'
         }
 
     return {
         "statusCode": 400,
-        "headers": {'content-type': 'application/json'},
+        "headers": {
+            'content-type': 'application/json',
+            'Access-Control-Allow-Headers': 'Content-Type',
+            'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
+            "Access-Control-Allow-Origin": '*'
+            },
         "body": '{\"error\": \"invalid request\"}'
     }
 
